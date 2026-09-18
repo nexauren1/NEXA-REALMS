@@ -47,8 +47,9 @@ class Menu extends Phaser.Scene{
 }
 
 class World extends Phaser.Scene{
+  constructor(){super("World")}
   create(){
-    this.s=load();this.npcs=[];this.stones=[];this.enemies=[];this.cool=0;this.dialog=false;this.touch={};
+    this.s=load();this.npcs=[];this.stones=[];this.enemies=[];this.cool=0;this.dialog=false;this.touch={};this.tilt={x:0,y:0,enabled:false};this.hp=100;this.hitInvuln=0;
     const W=2200,H=1500,g=this.add.graphics();
     g.fillStyle(0x2b5948,1).fillRect(0,0,W,H);
     for(let y=24;y<H;y+=48)for(let x=24;x<W;x+=48){g.fillStyle(((x+y)/48)%3===0?0x315f4e:0x2b5948,.95).fillRect(x-20,y-20,40,40)}
@@ -79,7 +80,9 @@ class World extends Phaser.Scene{
     this.input.keyboard.on("keydown-E",()=>this.interact());this.input.keyboard.on("keydown-SPACE",()=>this.pulse());
     this.input.keyboard.on("keydown-ESC",()=>{this.dialog?this.close():this.scene.start("Menu")});
     this.cameras.main.setBounds(0,0,W,H).startFollow(this.p,true,.08,.08);
-    this.toast("Find Nova, then restore the three Lumen Stones.");
+    try{if(screen.orientation?.lock)screen.orientation.lock("landscape").catch(()=>{})}catch{}
+    this.enableTilt();
+    this.toast("Tilt the phone to move Kysam, or use the touch controls.");
   }
   path(g,p){g.lineStyle(64,0x8b7653,1);p.slice(1).forEach((q,i)=>g.lineBetween(p[i][0],p[i][1],q[0],q[1]));g.lineStyle(52,0xb89a6b,1);p.slice(1).forEach((q,i)=>g.lineBetween(p[i][0],p[i][1],q[0],q[1]))}
   build(g,x,y,w,h,name){g.fillStyle(0xead7b3,1).fillRect(x-w/2,y-h/2,w,h);g.fillStyle(0x754c35,1).fillTriangle(x-w/2-8,y-h/2,x+w/2+8,y-h/2,x,y-h/2-55);g.fillStyle(0x5b4131,1).fillRect(x-18,y+h/2-42,36,42);this.obs?.push({x:x-w/2,y:y-h/2,w,h});label(this,x,y+h/2+13,name)}
@@ -91,6 +94,35 @@ class World extends Phaser.Scene{
     mk(70,h-45,"←",()=>this.touch.left=false);mk(135,h-45,"→",()=>this.touch.right=false);mk(70,h-105,"↑",()=>this.touch.up=false);mk(135,h-105,"↓",()=>this.touch.down=false);
     [[70,h-45,"left"],[135,h-45,"right"],[70,h-105,"up"],[135,h-105,"down"]].forEach(a=>{const x=a[0],y=a[1],k=a[2];const b=this.add.zone(x,y,58,50).setScrollFactor(0).setDepth(92).setInteractive();b.on("pointerdown",()=>this.touch[k]=true);b.on("pointerup",()=>this.touch[k]=false);b.on("pointerout",()=>this.touch[k]=false)});
     mk(w-85,h-62,"PULSE",()=>this.pulse());mk(w-165,h-62,"E",()=>this.interact());
+    const motion=this.add.rectangle(w-265,h-62,82,50,0x203f36,.92).setStrokeStyle(2,0x79aa99).setScrollFactor(0).setDepth(90).setInteractive();text(this,w-265,h-62,"TILT",13,this.tilt.enabled?"#c8ffea":"#a9beb5").setOrigin(.5).setScrollFactor(0).setDepth(91);motion.on("pointerdown",()=>this.enableTilt(true));
+  }
+  enableTilt(fromButton=false){
+    const start=()=>{
+      this.tilt.enabled=true;
+      this.toast("TILT CONTROL ACTIVE");
+    };
+    try{
+      const D=window.DeviceOrientationEvent;
+      if(D && typeof D.requestPermission==="function"){
+        D.requestPermission().then(v=>{if(v==="granted")start();else this.toast("Motion permission was not granted.");}).catch(()=>this.toast("Motion permission unavailable."));
+      }else if(D){
+        start();
+      }else{
+        this.toast("Tilt sensors are not available on this device.");
+      }
+    }catch{
+      if(fromButton)this.toast("Tilt sensors are not available on this device.");
+    }
+    if(!this._tiltListener){
+      this._tiltListener=(e)=>{
+        if(!this.tilt.enabled)return;
+        const gamma=Number.isFinite(e.gamma)?e.gamma:0;
+        const beta=Number.isFinite(e.beta)?e.beta:0;
+        this.tilt.x=Phaser.Math.Clamp(gamma/22,-1,1);
+        this.tilt.y=Phaser.Math.Clamp(beta/25,-1,1);
+      };
+      window.addEventListener("deviceorientation",this._tiltListener,{passive:true});
+    }
   }
   blocked(x,y){if(x<20||y<20||x>2180||y>1480)return true;return this.obs.some(o=>x+15>o.x&&x-15<o.x+o.w&&y+15>o.y&&y-15<o.y+o.h)}
   interact(){if(this.dialog)return this.close();const n=this.npcs.find(n=>dist(this.p,n)<82);if(n)return this.dialogBox(n.name,n.msg);
@@ -104,10 +136,11 @@ class World extends Phaser.Scene{
   dialogBox(t,msg){this.dialog=true;this.db=this.db||this.add.rectangle(this.scale.width/2,this.scale.height-100,Math.min(900,this.scale.width-30),125,0x10211d,.97).setStrokeStyle(2,0x77988d).setScrollFactor(0).setDepth(110);this.dt=this.dt||text(this,0,0,"",15).setScrollFactor(0).setDepth(111);this.dt.setPosition(30,this.scale.height-145).setText(t+"\n"+msg+"\n\nPress E to close.").setVisible(true);this.db.setVisible(true)}
   close(){this.dialog=false;if(this.db)this.db.setVisible(false);if(this.dt)this.dt.setVisible(false)}
   toast(s){this.toastG.setText(s).setAlpha(1);this.toastT=2500}
-  update(time,delta){if(this.dialog)return;const k=this.input.keyboard;let dx=(k.addKey("D").isDown||k.addKey("RIGHT").isDown||this.touch.right?1:0)-(k.addKey("A").isDown||k.addKey("LEFT").isDown||this.touch.left?1:0);let dy=(k.addKey("S").isDown||k.addKey("DOWN").isDown||this.touch.down?1:0)-(k.addKey("W").isDown||k.addKey("UP").isDown||this.touch.up?1:0);if(dx||dy){const l=Math.hypot(dx,dy);dx/=l;dy/=l;const nx=this.p.x+dx*185*delta/1000,ny=this.p.y+dy*185*delta/1000;if(!this.blocked(nx,this.p.y))this.p.x=nx;if(!this.blocked(this.p.x,ny))this.p.y=ny}this.cool=Math.max(0,this.cool-delta);this.toastT-=delta;if(this.toastT<=0)this.toastG.setAlpha(0);this.enemies.forEach(e=>{if(!e.alive)return;const d=dist(this.p,e);if(d<270&&d>42){e.x+=(this.p.x-e.x)/d*e.speed*delta/1000;e.y+=(this.p.y-e.y)/d*e.speed*delta/1000}e.g.x=e.x;e.g.y=e.y});this.hud.setText("KYSAM • LEVEL "+this.s.level+"\nXP "+this.s.xp+"/"+this.s.level*60+"   PULSE "+this.s.pulse+"   MOTES "+this.s.motes);this.obj.setText(Object.values(this.s.stones).filter(Boolean).length<3?"OBJECTIVE • Restore the three Lumen Stones.":"OBJECTIVE • Return to the northern Rift Gate.")}
+  update(time,delta){if(this.dialog)return;const k=this.input.keyboard;let dx=(k.addKey("D").isDown||k.addKey("RIGHT").isDown||this.touch.right?1:0)-(k.addKey("A").isDown||k.addKey("LEFT").isDown||this.touch.left?1:0);let dy=(k.addKey("S").isDown||k.addKey("DOWN").isDown||this.touch.down?1:0)-(k.addKey("W").isDown||k.addKey("UP").isDown||this.touch.up?1:0);if(this.tilt.enabled){dx=Math.abs(dx)>0?dx:Math.abs(this.tilt.x)>.12?this.tilt.x:0;dy=Math.abs(dy)>0?dy:Math.abs(this.tilt.y)>.12?this.tilt.y:0;}if(dx||dy){const l=Math.hypot(dx,dy);dx/=l;dy/=l;const nx=this.p.x+dx*185*delta/1000,ny=this.p.y+dy*185*delta/1000;if(!this.blocked(nx,this.p.y))this.p.x=nx;if(!this.blocked(this.p.x,ny))this.p.y=ny}this.cool=Math.max(0,this.cool-delta);this.toastT-=delta;if(this.toastT<=0)this.toastG.setAlpha(0);this.enemies.forEach((e,idx)=>{if(!e.alive)return;e.g.scale=1+Math.sin(time*0.004+idx)*0.06;const d=dist(this.p,e);if(d<270&&d>42){e.x+=(this.p.x-e.x)/d*e.speed*delta/1000;e.y+=(this.p.y-e.y)/d*e.speed*delta/1000}e.g.x=e.x;e.g.y=e.y});this.hitInvuln=Math.max(0,this.hitInvuln-delta);this.enemies.forEach(e=>{if(e.alive&&dist(this.p,e)<34&&this.hitInvuln<=0){this.hp=Math.max(0,this.hp-8);this.hitInvuln=900;if(this.hp===0){this.hp=100;this.p.setPosition(650,865);this.toast("Kysam recovered at Dawn Village.");}}});this.hud.setText("KYSAM • LEVEL "+this.s.level+"\nHP "+this.hp+"/100   XP "+this.s.xp+"/"+this.s.level*60+"   PULSE "+this.s.pulse+"\nMOTES "+this.s.motes+"   TILT "+(this.tilt.enabled?"ON":"OFF"));this.obj.setText(Object.values(this.s.stones).filter(Boolean).length<3?"OBJECTIVE • Restore the three Lumen Stones.":"OBJECTIVE • Return to the northern Rift Gate.")}
 }
 
 class Dungeon extends Phaser.Scene{
+  constructor(){super("Dungeon")}
   create(){
     this.s=load();this.a=0;this.hp=20;this.alive=false;this.dialog=false;const w=1700,h=1000,g=this.add.graphics();
     g.fillStyle(0x182a2a,1).fillRect(0,0,w,h);g.fillStyle(0x253a36,1).fillRect(140,140,1420,720);g.lineStyle(10,0x5c746b,1).strokeRect(140,140,1420,720);g.fillStyle(0x3f2f5f,1).fillEllipse(850,500,300,360);
