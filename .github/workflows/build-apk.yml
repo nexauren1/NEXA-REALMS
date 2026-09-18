@@ -54,8 +54,8 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          if git ls-remote --exit-code --tags origin refs/tags/v0.1.0 >/dev/null 2>&1; then
+          if git ls-remote --exit-code --tags origin refs/tags/v0.1.1 >/dev/null 2>&1; then
             echo "v0.1.0 already exists; build retained as artifact."
             exit 0
           fi
-          gh release create v0.1.0 android/app/build/outputs/apk/debug/app-debug.apk             --title "NEXA REALMS v0.1.0"             --notes "First playable chapter: explore Auren, restore the three Lumen Stones, open the Rift Gate and restore the Rift Core."             --target main
+          gh release create v0.1.0 android/app/build/outputs/apk/debug/app-debug.apk             --title "NEXA REALMS v0.1.1"             --notes "Android compatibility update: Canvas renderer for wider WebView compatibility, plus the first playable Auren chapter."             --target main
