@@ -4,8 +4,15 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
 <meta name="theme-color" content="#10211d">
-<meta name="description" content="NEXA REALMS — The Veil of Auren">
 <title>NEXA REALMS</title>
 </head>
-<body><div id="game"></div><script type="module" src="/src/game.js"></script></body>
+<body>
+<div id="game"><div style="padding:28px;font-family:system-ui;color:#c8ffea;background:#10211d;height:100%;box-sizing:border-box"><strong>NEXA REALMS</strong><p>Starting Auren…</p></div></div>
+<script type="module">
+  import("./src/game.js").catch((err)=>{
+    const el=document.getElementById("game");
+    el.innerHTML="<div style=\"padding:24px;font-family:system-ui;color:#eaf7f1;background:#10211d;height:100%;box-sizing:border-box\"><h2>NEXA REALMS</h2><p>Could not start the game.</p><small>"+String(err?.message||err)+"</small></div>";
+  });
+</script>
+</body>
 </html>
