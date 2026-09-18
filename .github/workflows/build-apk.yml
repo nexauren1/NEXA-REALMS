@@ -54,11 +54,11 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          if gh release view v0.1.1 >/dev/null 2>&1; then
-            echo "v0.1.1 already exists; build retained as artifact."
+          if gh release view v0.1.2 >/dev/null 2>&1; then
+            echo "v0.1.2 already exists; build retained as artifact."
             exit 0
           fi
-          gh release create v0.1.1 android/app/build/outputs/apk/debug/app-debug.apk \
-            --title "NEXA REALMS v0.1.1" \
-            --notes "Android compatibility update: Canvas renderer for wider WebView compatibility, plus the first playable Auren chapter." \
+          gh release create v0.1.2 android/app/build/outputs/apk/debug/app-debug.apk \
+            --title "NEXA REALMS v0.1.2" \
+            --notes "Professional mobile update: unique Phaser scene keys, tilt controls, safer game boot, Canvas rendering and the first playable Auren chapter." \
             --target main
