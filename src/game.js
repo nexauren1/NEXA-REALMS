@@ -1,5 +1,10 @@
 import Phaser from "phaser";
 
+window.addEventListener("error", (event) => {
+  const el=document.getElementById("game");
+  if (el && !el.dataset.errorShown) { el.dataset.errorShown="1"; el.innerHTML="<div style=\"padding:24px;font-family:system-ui;color:#eaf7f1;background:#10211d;height:100%;box-sizing:border-box\"><h2>NEXA REALMS</h2><p>Game startup error. Reload the app.</p><small>"+String(event.error?.message||event.message||"Unknown error")+"</small></div>"; }
+});
+
 const SAVE_KEY="nexa-realms-save-v1";
 const C={Kysam:0x7fe3c0,Nova:0xf5c45c,Kai:0x82b8ff,Zara:0xd59cff};
 const ROLE={Kysam:"THE RESONANT",Nova:"MAPKEEPER",Kai:"TRAIL SCOUT",Zara:"ARCHIVIST"};
@@ -122,4 +127,4 @@ class Dungeon extends Phaser.Scene{
 
 function tree(scene,x,y){const g=scene.add.graphics().setDepth(5);g.fillStyle(0x704a35,1).fillRect(x-7,y+6,14,38);g.fillStyle(0x173a2d,1).fillCircle(x,y,30);g.fillStyle(0x2e684c,1).fillCircle(x-16,y-8,20);g.fillStyle(0x3b7958,1).fillCircle(x+17,y-8,20)}
 function pointSeg(px,py,x1,y1,x2,y2){const dx=x2-x1,dy=y2-y1,d=dx*dx+dy*dy||1,t=Math.max(0,Math.min(1,((px-x1)*dx+(py-y1)*dy)/d));return Math.hypot(px-(x1+t*dx),py-(y1+t*dy))}
-new Phaser.Game({type:Phaser.AUTO,parent:"game",width:1280,height:720,backgroundColor:"#10211d",pixelArt:true,antialias:false,scale:{mode:Phaser.Scale.RESIZE,autoCenter:Phaser.Scale.CENTER_BOTH},input:{activePointers:4},scene:[Menu,World,Dungeon]});
+new Phaser.Game({type:Phaser.CANVAS,parent:"game",width:1280,height:720,backgroundColor:"#10211d",pixelArt:true,render:{antialias:false,roundPixels:true},scale:{mode:Phaser.Scale.RESIZE,autoCenter:Phaser.Scale.CENTER_BOTH},input:{activePointers:4},scene:[Menu,World,Dungeon]});
