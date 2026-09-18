@@ -49,7 +49,7 @@ class Menu extends Phaser.Scene{
 class World extends Phaser.Scene{
   constructor(){super("World")}
   create(){
-    this.s=load();this.npcs=[];this.stones=[];this.enemies=[];this.cool=0;this.dialog=false;this.touch={};this.tilt={x:0,y:0,enabled:false};this.hp=100;this.hitInvuln=0;
+    this.s=load();this.npcs=[];this.stones=[];this.enemies=[];this.obs=[];this.cool=0;this.dialog=false;this.touch={};this.tilt={x:0,y:0,enabled:false};this.hp=100;this.hitInvuln=0;
     const W=2200,H=1500,g=this.add.graphics();
     g.fillStyle(0x2b5948,1).fillRect(0,0,W,H);
     for(let y=24;y<H;y+=48)for(let x=24;x<W;x+=48){g.fillStyle(((x+y)/48)%3===0?0x315f4e:0x2b5948,.95).fillRect(x-20,y-20,40,40)}
@@ -61,7 +61,7 @@ class World extends Phaser.Scene{
     g.fillStyle(0xd1b47d,1).fillCircle(650,760,72);
     g.fillStyle(0x2a2238,1).fillRect(1030,65,140,95);g.lineStyle(6,0x7754b7,1).strokeRect(1030,65,140,95);
     text(this,1100,35,"RIFT GATE",15,"#d1c4f7").setOrigin(.5);
-    let seed=17;this.obs=[];
+    let seed=17;
     for(let y=45;y<H-40;y+=85)for(let x=45;x<W-40;x+=85){
       seed=(seed*9301+49297)%233280;const px=x+(seed/233280-.5)*34;
       seed=(seed*9301+49297)%233280;const py=y+(seed/233280-.5)*34;
@@ -80,7 +80,7 @@ class World extends Phaser.Scene{
     this.input.keyboard.on("keydown-E",()=>this.interact());this.input.keyboard.on("keydown-SPACE",()=>this.pulse());
     this.input.keyboard.on("keydown-ESC",()=>{this.dialog?this.close():this.scene.start("Menu")});
     this.cameras.main.setBounds(0,0,W,H).startFollow(this.p,true,.08,.08);
-    try{if(screen.orientation?.lock)screen.orientation.lock("landscape").catch(()=>{})}catch{}
+    try{if(window.screen?.orientation?.lock)window.screen.orientation.lock("landscape").catch(()=>{})}catch{}
     this.enableTilt();
     this.toast("Tilt the phone to move Kysam, or use the touch controls.");
   }
