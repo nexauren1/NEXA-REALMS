@@ -1,0 +1,6 @@
+{
+  "appId": "com.nexauren.realms",
+  "appName": "NEXA REALMS",
+  "webDir": "dist",
+  "server": { "androidScheme": "https" }
+}
